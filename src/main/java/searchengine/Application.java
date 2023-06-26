@@ -17,7 +17,7 @@ public class Application {
         Session session = sessionFactory.openSession();
         sessionFactory.close();
 
-        //создание индекс по полю path
+        //создание индекса по полю path
         Connection connection;
         try {
             connection = DriverManager.getConnection(

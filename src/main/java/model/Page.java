@@ -1,9 +1,14 @@
 package model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 
 @Entity
-@Table(name = "page")//, indexes = @Index(columnList = "path", columnLength = 255))
+@Table(name = "page")
+@Setter
+@Getter
 public class Page {
 
     @Id
@@ -23,45 +28,6 @@ public class Page {
     @Column(columnDefinition = "MEDIUMTEXT", nullable = false)
     private String content;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getSite_id() {
-        return siteId;
-    }
-
-    public void setSite_id(int site_id) {
-        this.siteId = site_id;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
 }
 /*
 page — проиндексированные страницы сайта

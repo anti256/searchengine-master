@@ -1,10 +1,15 @@
 package model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "site")
+@Setter
+@Getter
 public class Site {
 
     @Id
@@ -27,55 +32,6 @@ public class Site {
 
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
     private String name;
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public StatusIndexing getStatus() {
-        return status;
-    }
-
-    public void setStatus(StatusIndexing status) {
-        this.status = status;
-    }
-
-    public Date getStatusTime() {
-        return statusTime;
-    }
-
-    public void setStatusTime(Date statusTime) {
-        this.statusTime = statusTime;
-    }
-
-    public String getLastError() {
-        return lastError;
-    }
-
-    public void setLastError(String lastError) {
-        this.lastError = lastError;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
 
 }
 /*

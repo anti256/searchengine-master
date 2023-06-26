@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "indexing-settings")
+@ConfigurationProperties(prefix = "indexing-settings")//в application.yaml есть раздел indexing-settings
 public class SitesList {
-    private List<Site> sites;
+    private List<Site> sites;//считывает в list все данные подраздела sites application.yaml
 }
