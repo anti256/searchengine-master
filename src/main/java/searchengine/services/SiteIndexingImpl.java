@@ -13,7 +13,7 @@ import java.util.List;
 public class SiteIndexingImpl implements SiteIndexing{
     boolean indexingState = false;
     private final SitesList sites;
-    private List<Site> sitesList = sites.getSites();
+    //List<Site> sitesList = sites.getSites();
 
 
 
@@ -25,6 +25,7 @@ public class SiteIndexingImpl implements SiteIndexing{
             response.put("result", false);
             response.put("error", "Индексация уже запущена");
             return response;}
+        List<Site> sitesList = sites.getSites();
         for (int i = 0; i < sitesList.size(); i++) {
             response.put(sitesList.get(i).getUrl(),sitesList.get(i).getName());
         }

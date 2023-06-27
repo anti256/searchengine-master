@@ -18,15 +18,15 @@ public class Application {
         sessionFactory.close();
 
         //создание индекса по полю path
-        Connection connection;
-        try {
-            connection = DriverManager.getConnection(
-                            "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
-            connection.createStatement().execute("ALTER TABLE PAGE ADD INDEX (path(255))");
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            };
+//        Connection connection;
+//        try {
+//            connection = DriverManager.getConnection(
+//                            "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
+//            connection.createStatement().execute("ALTER TABLE PAGE ADD INDEX (path(200))");
+//            connection.close();
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//            };
 
 
 

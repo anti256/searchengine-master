@@ -20,6 +20,8 @@ public class Page {
     private int siteId;
 
     @Column(columnDefinition = "TEXT", nullable = false)
+    @Index(name = "path", length=255)
+    //@org.hibernate.annotations.Table(name="Forest", indexes = { @Index(name="idx", columnNames = { "name", "length" } ) } )
     private String path;
 
     @Column(nullable = false)

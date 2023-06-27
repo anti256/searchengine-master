@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import searchengine.dto.statistics.StatisticsResponse;
+import searchengine.services.SiteIndexing;
 import searchengine.services.SiteIndexingImpl;
 import searchengine.services.StatisticsService;
 
@@ -15,10 +16,13 @@ import searchengine.services.StatisticsService;
 public class ApiController {
 
     private final StatisticsService statisticsService;
+    private final SiteIndexing siteIndexing;
 
-    public ApiController(StatisticsService statisticsService) {
+    public ApiController(StatisticsService statisticsService, SiteIndexing siteIndexing) {
         this.statisticsService = statisticsService;
+        this.siteIndexing = siteIndexing;
     }
+
 
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
@@ -27,7 +31,7 @@ public class ApiController {
 
     @GetMapping("/startIndexing")
     public ResponseEntity<JSONObject> startIndexing() {
-        return new ResponseEntity<>(new SiteIndexingImpl().startSitesIndexing(), HttpStatus.OK);
+        return new ResponseEntity<>(siteIndexing.startSitesIndexing(),HttpStatus.OK);
     }
 //    public JSONObject startIndexing(){
 //        JSONObject dataJson = new JSONObject();//создание json-объекта
