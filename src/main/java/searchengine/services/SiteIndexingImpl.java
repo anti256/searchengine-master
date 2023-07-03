@@ -1,12 +1,21 @@
 package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
+import model.StatusIndexing;
+import org.hibernate.Transaction;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
+//import searchengine.SessionFactoryCreate;
+//import model.Site;
+import model.Page;
 
+import javax.transaction.*;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import static searchengine.Application.session;
 
 @Service
 @RequiredArgsConstructor
@@ -18,19 +27,50 @@ public class SiteIndexingImpl implements SiteIndexing{
 
 
     @Override
-    public JSONObject startSitesIndexing() {
+    public JSONObject startSitesIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
+        System.out.println("1");
         JSONObject response = new JSONObject();//создание json-объекта
+        System.out.println("2");
         if (indexingState == true){ //если индексация запущена
             //добавление строк в объект json-линии
             response.put("result", false);
             response.put("error", "Индексация уже запущена");
             return response;}
+        System.out.println("3");
         List<Site> sitesList = sites.getSites();
+        System.out.println("4");
+        ArrayList<model.Site> dbSite = new ArrayList<>();
+        System.out.println("5");
+        Transaction transaction = session.beginTransaction();
         for (int i = 0; i < sitesList.size(); i++) {
+            System.out.println("6" + i);
             response.put(sitesList.get(i).getUrl(),sitesList.get(i).getName());
-        }
+            model.Site defaultSite = new model.Site();
+            defaultSite.setUrl(sitesList.get(i).getUrl());
+            defaultSite.setName(sitesList.get(i).getName());
+            defaultSite.setStatus(StatusIndexing.INDEXING);
+            defaultSite.setStatusTime(new Date());
+            dbSite.add(defaultSite);
+            System.out.println("7" + i);
+            System.out.println(defaultSite.getUrl());
 
+            //session.save(defaultSite);
+
+            session.persist(defaultSite);
+            System.out.println("8" + i);
+           //transaction.commit();
+        }
+        transaction.commit();
         response.put("result", true);
+        //String hql = "";
+        for (int i = 0; i < sitesList.size(); i++) {
+            String hql = "DELETE Site WHERE url = '" + sitesList.get(i).getUrl() + "'";
+            System.out.println(hql);
+            session.createQuery(hql);
+        }
+        //hql = hql.substring(0,hql.length()-1);
+        //System.out.println(hql);
+        //session.createQuery(hql);
         return response;
     }
 }

@@ -2,6 +2,8 @@ package model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.NaturalId;
+
 
 import javax.persistence.*;
 
@@ -19,8 +21,8 @@ public class Page {
     @Column(name = "site_id", nullable = false)
     private int siteId;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    @Index(name = "path", length=255)
+    @NaturalId
+    @Column(columnDefinition = "TEXT", nullable = false, unique = true)
     //@org.hibernate.annotations.Table(name="Forest", indexes = { @Index(name="idx", columnNames = { "name", "length" } ) } )
     private String path;
 

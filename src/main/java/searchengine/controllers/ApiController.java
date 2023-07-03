@@ -11,6 +11,11 @@ import searchengine.services.SiteIndexing;
 import searchengine.services.SiteIndexingImpl;
 import searchengine.services.StatisticsService;
 
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+
 @RestController
 @RequestMapping("/api")
 public class ApiController {
@@ -30,7 +35,7 @@ public class ApiController {
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<JSONObject> startIndexing() {
+    public ResponseEntity<JSONObject> startIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
         return new ResponseEntity<>(siteIndexing.startSitesIndexing(),HttpStatus.OK);
     }
 //    public JSONObject startIndexing(){
