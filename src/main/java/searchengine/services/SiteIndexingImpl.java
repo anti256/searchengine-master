@@ -60,13 +60,23 @@ public class SiteIndexingImpl implements SiteIndexing{
             System.out.println("8" + i);
            //transaction.commit();
         }
-        transaction.commit();
+        //transaction.commit();
         response.put("result", true);
         //String hql = "";
-        for (int i = 0; i < sitesList.size(); i++) {
-            String hql = "DELETE Site WHERE url = '" + sitesList.get(i).getUrl() + "'";
-            System.out.println(hql);
-            session.createQuery(hql);
+//        for (int i = 0; i < sitesList.size(); i++) {
+//            String hql = "delete model.Site where url = '" + sitesList.get(i).getUrl() + "'";
+//            System.out.println(hql);
+//            session.createQuery(hql);
+//        }
+        for (int i = dbSite.size()-1; i > -1 ; i--) {
+            if (dbSite.get(i).getUrl() == sitesList.get(i).getUrl()){
+                session.delete(dbSite.get(i));//удаляет из БД
+                dbSite.remove(i);//удаляет соответствующий записи из БД экземпляр класса
+            }
+        }
+        transaction.commit();
+        for (int i = 0; i < dbSite.size(); i++) {
+            System.out.println(dbSite.get(i).getName());
         }
         //hql = hql.substring(0,hql.length()-1);
         //System.out.println(hql);
