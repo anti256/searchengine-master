@@ -38,16 +38,6 @@ public class ApiController {
     public ResponseEntity<JSONObject> startIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
         return new ResponseEntity<>(siteIndexing.startSitesIndexing(),HttpStatus.OK);
     }
-//    public JSONObject startIndexing(){
-//        JSONObject dataJson = new JSONObject();//создание json-объекта
-//        if (indexingState == true){ //если индексация запущена
-//            //добавление строк в объект json-линии
-//            dataJson.put("result", false);
-//            dataJson.put("error", "Индексация уже запущена");
-//            return dataJson;}
-//        dataJson.put("result", true);
-//        return dataJson;
-//    }
 
 }
 

@@ -3,14 +3,12 @@ package searchengine.services;
 import lombok.RequiredArgsConstructor;
 import model.StatusIndexing;
 import org.hibernate.Transaction;
-import org.hibernate.query.Query;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
 //import searchengine.SessionFactoryCreate;
 //import model.Site;
-import model.Page;
 
 import javax.transaction.*;
 import java.util.ArrayList;
@@ -29,22 +27,17 @@ public class SiteIndexingImpl implements SiteIndexing{
 
     @Override
     public JSONObject startSitesIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
-        System.out.println("1");
         JSONObject response = new JSONObject();//создание json-объекта
-        System.out.println("2");
         if (indexingState == true){ //если индексация запущена
             //добавление строк в объект json-линии
             response.put("result", false);
             response.put("error", "Индексация уже запущена");
             return response;}
-        System.out.println("3");
         List<Site> sitesList = sites.getSites();
-        System.out.println("4");
         ArrayList<model.Site> dbSite = new ArrayList<>();
-        System.out.println("5");
         Transaction transaction = session.beginTransaction();
-        new addTenDBrecords();
-        for (int i = 0; i < sitesList.size(); i++) {
+        new addAnotherDBrecords(sitesList);
+ /*       for (int i = 0; i < sitesList.size(); i++) {
             System.out.println("6" + i);
             response.put(sitesList.get(i).getUrl(),sitesList.get(i).getName());
             model.Site defaultSite = new model.Site();
@@ -56,12 +49,10 @@ public class SiteIndexingImpl implements SiteIndexing{
             System.out.println("7" + i);
             System.out.println(defaultSite.getUrl());
             System.out.println(defaultSite.getName());
-            //session.save(defaultSite);
-
             session.persist(defaultSite);
             System.out.println("8" + i);
-           //transaction.commit();
-        }
+        }*/
+
         //transaction.commit();
         response.put("result", true);
         //String hql = "";
@@ -70,22 +61,24 @@ public class SiteIndexingImpl implements SiteIndexing{
 //            System.out.println(hql);
 //            session.createQuery(hql);
 //        }
-        for (int i = dbSite.size()-1; i > -1 ; i--) {
-            if (dbSite.get(i).getUrl() == sitesList.get(i).getUrl()){
-                session.delete(dbSite.get(i));//удаляет из БД
-                dbSite.remove(i);//удаляет соответствующий записи из БД экземпляр класса
-            }
-        }
-        String hql = "delete " + model.Site.class.getSimpleName() + " where url = \'https://www.site5.ru\'";
-        int query = session.createQuery(hql).executeUpdate();
-        System.out.println("HQL :" + hql);
+
+//        for (int i = dbSite.size()-1; i > -1 ; i--) {
+//            if (dbSite.get(i).getUrl() == sitesList.get(i).getUrl()){
+//                session.delete(dbSite.get(i));//удаляет из БД
+//                dbSite.remove(i);//удаляет соответствующий записи из БД экземпляр класса
+//            }
+//        }
+
+//        String hql = "delete " + model.Site.class.getSimpleName() + " where url = \'https://www.site5.ru\'";
+//        session.createQuery(hql).executeUpdate();
+//        System.out.println("HQL :" + hql);
 
 
         transaction.commit();
-        System.out.println("dbSite.size = " + dbSite.size());
-        for (int i = 0; i < dbSite.size(); i++) {
+        //System.out.println("dbSite.size = " + dbSite.size());
+       /* for (int i = 0; i < dbSite.size(); i++) {
             System.out.println(dbSite.get(i).getName());
-        }
+        }*/
         //hql = hql.substring(0,hql.length()-1);
         //System.out.println(hql);
         //session.createQuery(hql);

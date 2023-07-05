@@ -1,19 +1,30 @@
 package searchengine.services;
 
-import lombok.RequiredArgsConstructor;
-import model.Page;
 import model.StatusIndexing;
-import org.springframework.stereotype.Service;
+import searchengine.config.Site;
 
 import java.util.Date;
+import java.util.List;
 
 import static searchengine.Application.session;
 
 
 
-public class addTenDBrecords {
+public class addAnotherDBrecords {
 
-    public addTenDBrecords() {
+    public addAnotherDBrecords(List<Site> inputArray) {
+        for (int i = 0; i < inputArray.size(); i++) {
+            model.Site defaultSite = new model.Site();
+            defaultSite.setUrl(inputArray.get(i).getUrl());
+            defaultSite.setName(inputArray.get(i).getName());
+            defaultSite.setStatus(StatusIndexing.INDEXED);
+            defaultSite.setStatusTime(new Date());
+            System.out.println(defaultSite.getUrl());
+            System.out.println(defaultSite.getName());
+            session.persist(defaultSite);
+        }
+
+
         for (int i = 0; i < 10; i++) {
             model.Site defaultSite = new model.Site();
             defaultSite.setUrl("https://www.site" + i + ".ru");

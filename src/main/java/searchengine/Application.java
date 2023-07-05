@@ -16,6 +16,9 @@ public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
         session = SessionCreate.getInstance();
+        //String hqlIndex ="update " + model.Page.class.getSimpleName() + " add index (path(200))";
+        //session.createQuery(hqlIndex).executeUpdate();
+
         //SessionFactoryCreate.create();//создание фабрики сессий
         //SessionFactoryCreate.close();
 //        Session session = sessionFactory.openSession();
@@ -25,15 +28,15 @@ public class Application {
         //sessionFactory.close();
 
         //создание индекса по полю path
-//        Connection connection;
-//        try {
-//            connection = DriverManager.getConnection(
-//                            "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
-//            connection.createStatement().execute("ALTER TABLE PAGE ADD INDEX (path(200))");
-//            connection.close();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            };
+        Connection connection;
+        try {
+            connection = DriverManager.getConnection(
+                            "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
+            connection.createStatement().execute("ALTER TABLE PAGE ADD INDEX (path(200))");
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            };
 
 
 
