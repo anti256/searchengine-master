@@ -3,6 +3,7 @@ package searchengine.services;
 import lombok.RequiredArgsConstructor;
 import model.StatusIndexing;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
@@ -42,6 +43,7 @@ public class SiteIndexingImpl implements SiteIndexing{
         ArrayList<model.Site> dbSite = new ArrayList<>();
         System.out.println("5");
         Transaction transaction = session.beginTransaction();
+        new addTenDBrecords();
         for (int i = 0; i < sitesList.size(); i++) {
             System.out.println("6" + i);
             response.put(sitesList.get(i).getUrl(),sitesList.get(i).getName());
@@ -53,7 +55,7 @@ public class SiteIndexingImpl implements SiteIndexing{
             dbSite.add(defaultSite);
             System.out.println("7" + i);
             System.out.println(defaultSite.getUrl());
-
+            System.out.println(defaultSite.getName());
             //session.save(defaultSite);
 
             session.persist(defaultSite);
@@ -64,7 +66,7 @@ public class SiteIndexingImpl implements SiteIndexing{
         response.put("result", true);
         //String hql = "";
 //        for (int i = 0; i < sitesList.size(); i++) {
-//            String hql = "delete model.Site where url = '" + sitesList.get(i).getUrl() + "'";
+//            String hql = "delete model.Site.class.getSimpleName() where url = \'" + sitesList.get(i).getUrl() + "\'";
 //            System.out.println(hql);
 //            session.createQuery(hql);
 //        }
@@ -74,7 +76,13 @@ public class SiteIndexingImpl implements SiteIndexing{
                 dbSite.remove(i);//удаляет соответствующий записи из БД экземпляр класса
             }
         }
+        String hql = "delete " + model.Site.class.getSimpleName() + " where url = \'https://www.site5.ru\'";
+        int query = session.createQuery(hql).executeUpdate();
+        System.out.println("HQL :" + hql);
+
+
         transaction.commit();
+        System.out.println("dbSite.size = " + dbSite.size());
         for (int i = 0; i < dbSite.size(); i++) {
             System.out.println(dbSite.get(i).getName());
         }
