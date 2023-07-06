@@ -3,6 +3,7 @@ package searchengine.services;
 import model.StatusIndexing;
 import searchengine.config.Site;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class addAnotherDBrecords {
         }
 
 
+
         for (int i = 0; i < 10; i++) {
             model.Site defaultSite = new model.Site();
             defaultSite.setUrl("https://www.site" + i + ".ru");
@@ -35,7 +37,7 @@ public class addAnotherDBrecords {
 
             //System.out.println(defaultSite.getId());
 
-            model.Page defaultPage1 = new model.Page();
+            /*model.Page defaultPage1 = new model.Page();
             model.Page defaultPage2 = new model.Page();
             defaultPage1.setCode(200);
             defaultPage2.setCode(200);
@@ -46,8 +48,27 @@ public class addAnotherDBrecords {
             defaultPage1.setPath("/news" + i + "/01");
             defaultPage2.setPath("/news" + i + "/02");
             session.persist(defaultPage1);
-            session.persist(defaultPage2);
+            session.persist(defaultPage2);*/
         }
+
+        List<model.Site> fromDBsites = new ArrayList<>();
+        fromDBsites = session.createQuery("from Site", model.Site.class).list();
+        for (int i = 0; i < fromDBsites.size(); i++) {
+            model.Page defaultPage1 = new model.Page();
+            model.Page defaultPage2 = new model.Page();
+            defaultPage1.setCode(200);
+            defaultPage2.setCode(200);
+            defaultPage1.setSiteId(fromDBsites.get(i).getId());
+            defaultPage2.setSiteId(fromDBsites.get(i).getId());
+            defaultPage1.setContent("anything");
+            defaultPage2.setContent("anything");
+            defaultPage1.setPath("/news" + i + "/01");
+            defaultPage2.setPath("/news" + i + "/02");
+            session.persist(defaultPage1);
+            session.persist(defaultPage2);
+            System.out.println("fromDBsites - " + fromDBsites.get(i).getName());
+        }
+
 
     }
 

@@ -26,7 +26,8 @@ public class SiteIndexingImpl implements SiteIndexing{
 
 
     @Override
-    public JSONObject startSitesIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
+    public JSONObject startSitesIndexing()
+            throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
         JSONObject response = new JSONObject();//создание json-объекта
         if (indexingState == true){ //если индексация запущена
             //добавление строк в объект json-линии
@@ -34,9 +35,21 @@ public class SiteIndexingImpl implements SiteIndexing{
             response.put("error", "Индексация уже запущена");
             return response;}
         List<Site> sitesList = sites.getSites();
-        ArrayList<model.Site> dbSite = new ArrayList<>();
+        //ArrayList<model.Site> dbSite = new ArrayList<>();
         Transaction transaction = session.beginTransaction();
         new addAnotherDBrecords(sitesList);
+        List<model.Site> dbSites = new ArrayList<>();
+        dbSites = session.createQuery("from " + model.Site.class.getSimpleName() , model.Site.class).list();
+         for (int i = sitesList.size()-1; i > -1 ; i--) {
+            String hqlPages = "delete " + model.Page.class.getSimpleName() + " where site_id = " + dbSites.get(i).getId();
+            session.createQuery(hqlPages);
+            String hql = "delete " + model.Site.class.getSimpleName() + " where url = \'" + sitesList.get(i).getUrl() + "\'";
+            System.out.println(hql);
+            session.createQuery(hql);
+         }
+
+
+
  /*       for (int i = 0; i < sitesList.size(); i++) {
             System.out.println("6" + i);
             response.put(sitesList.get(i).getUrl(),sitesList.get(i).getName());
