@@ -3,6 +3,7 @@ package searchengine.services;
 import lombok.RequiredArgsConstructor;
 import model.StatusIndexing;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
@@ -34,67 +35,29 @@ public class SiteIndexingImpl implements SiteIndexing{
             response.put("result", false);
             response.put("error", "Индексация уже запущена");
             return response;}
-        List<Site> sitesList = sites.getSites();
-        //ArrayList<model.Site> dbSite = new ArrayList<>();
+        List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
         Transaction transaction = session.beginTransaction();
-        new addAnotherDBrecords(sitesList);
-        List<model.Site> dbSites = new ArrayList<>();
-        dbSites = session.createQuery("from " + model.Site.class.getSimpleName() , model.Site.class).list();
-         for (int i = sitesList.size()-1; i > -1 ; i--) {
-            String hqlPages = "delete " + model.Page.class.getSimpleName() + " where site_id = " + dbSites.get(i).getId();
-            session.createQuery(hqlPages);
-            String hql = "delete " + model.Site.class.getSimpleName() + " where url = \'" + sitesList.get(i).getUrl() + "\'";
+        new addAnotherDBrecords(sitesList);//добавление в БД записей для отработки
+        ArrayList<Integer> indexArray = new ArrayList<Integer>();//список id из БД сайтов из заполненного list'а
+        for (int i = 0; i < sitesList.size(); i++) {//наполнение списка с id из БД сайтов из заполненного list'а
+            String indexFindQuery = "from " + model.Site.class.getSimpleName()
+                    + " sites where sites.url = \'" + sitesList.get(i).getUrl() + "\'";System.out.println(indexArray);
+            Query query = session.createQuery(indexFindQuery);
+            List<model.Site> results = query.list();
+            for (model.Site st:results) {
+                indexArray.add(st.getId());
+            }
+        }
+        System.out.println("---------------");
+         for (int i = indexArray.size()-1; i > -1 ; i--) {//очистка БД по найденным id
+            String hqlPages = "delete " + model.Page.class.getSimpleName() + " where siteId = " + indexArray.get(i);
+            session.createQuery(hqlPages).executeUpdate();
+            String hql = "delete " + model.Site.class.getSimpleName() + " where id = " + indexArray.get(i);
             System.out.println(hql);
-            session.createQuery(hql);
+            session.createQuery(hql).executeUpdate();
          }
-
-
-
- /*       for (int i = 0; i < sitesList.size(); i++) {
-            System.out.println("6" + i);
-            response.put(sitesList.get(i).getUrl(),sitesList.get(i).getName());
-            model.Site defaultSite = new model.Site();
-            defaultSite.setUrl(sitesList.get(i).getUrl());
-            defaultSite.setName(sitesList.get(i).getName());
-            defaultSite.setStatus(StatusIndexing.INDEXING);
-            defaultSite.setStatusTime(new Date());
-            dbSite.add(defaultSite);
-            System.out.println("7" + i);
-            System.out.println(defaultSite.getUrl());
-            System.out.println(defaultSite.getName());
-            session.persist(defaultSite);
-            System.out.println("8" + i);
-        }*/
-
-        //transaction.commit();
         response.put("result", true);
-        //String hql = "";
-//        for (int i = 0; i < sitesList.size(); i++) {
-//            String hql = "delete model.Site.class.getSimpleName() where url = \'" + sitesList.get(i).getUrl() + "\'";
-//            System.out.println(hql);
-//            session.createQuery(hql);
-//        }
-
-//        for (int i = dbSite.size()-1; i > -1 ; i--) {
-//            if (dbSite.get(i).getUrl() == sitesList.get(i).getUrl()){
-//                session.delete(dbSite.get(i));//удаляет из БД
-//                dbSite.remove(i);//удаляет соответствующий записи из БД экземпляр класса
-//            }
-//        }
-
-//        String hql = "delete " + model.Site.class.getSimpleName() + " where url = \'https://www.site5.ru\'";
-//        session.createQuery(hql).executeUpdate();
-//        System.out.println("HQL :" + hql);
-
-
         transaction.commit();
-        //System.out.println("dbSite.size = " + dbSite.size());
-       /* for (int i = 0; i < dbSite.size(); i++) {
-            System.out.println(dbSite.get(i).getName());
-        }*/
-        //hql = hql.substring(0,hql.length()-1);
-        //System.out.println(hql);
-        //session.createQuery(hql);
         return response;
     }
 }
