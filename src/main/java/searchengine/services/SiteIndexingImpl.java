@@ -12,10 +12,12 @@ import searchengine.config.SitesList;
 //import model.Site;
 
 import javax.transaction.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import static searchengine.Application.session;
+import static searchengine.services.SQLqueries.sqlQuerySelect.selectBD;
 
 @Service
 @RequiredArgsConstructor
@@ -30,24 +32,44 @@ public class SiteIndexingImpl implements SiteIndexing{
     public JSONObject startSitesIndexing()
             throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
         JSONObject response = new JSONObject();//создание json-объекта
-        if (indexingState == true){ //если индексация запущена
-            //добавление строк в объект json-линии
-            response.put("result", false);
-            response.put("error", "Индексация уже запущена");
-            return response;}
         List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
         Transaction transaction = session.beginTransaction();
-        new addAnotherDBrecords(sitesList);//добавление в БД записей для отработки
         ArrayList<Integer> indexArray = new ArrayList<Integer>();//список id из БД сайтов из заполненного list'а
+
+
+
+
+
+
         for (int i = 0; i < sitesList.size(); i++) {//наполнение списка с id из БД сайтов из заполненного list'а
             String indexFindQuery = "from " + model.Site.class.getSimpleName()
-                    + " sites where sites.url = \'" + sitesList.get(i).getUrl() + "\'";System.out.println(indexArray);
+                    + " sites where sites.url = \'" + sitesList.get(i).getUrl() + "\'";
+            System.out.println(indexArray);
             Query query = session.createQuery(indexFindQuery);
-            List<model.Site> results = query.list();
-            for (model.Site st:results) {
+            List<model.Site> queryResults = query.list();
+            for (model.Site st:queryResults) {
+                if (st.getStatus().equals(StatusIndexing.INDEXING)){
+                    response.put("result", false);
+                    response.put("error", "Индексация уже запущена");
+                    transaction.commit();
+                    return response;
+                }
                 indexArray.add(st.getId());
             }
         }
+        new addAnotherDBrecords(sitesList);//добавление в БД записей для отработки
+
+       /* for (int i = 0; i < sitesList.size(); i++){
+            String sqlDefaultQuery = "select id from site where url = \'" + sitesList.get(i).getUrl() + "\'";
+            ResultSet rs = selectBD(sqlDefaultQuery);
+            try {
+                System.out.println("---" + rs.getArray("id"));
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            // indexArray.addAll(rs.getArray("id"));
+        }*/
+
         System.out.println("---------------");
          for (int i = indexArray.size()-1; i > -1 ; i--) {//очистка БД по найденным id
             String hqlPages = "delete " + model.Page.class.getSimpleName() + " where siteId = " + indexArray.get(i);

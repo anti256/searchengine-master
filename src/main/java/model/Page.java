@@ -18,8 +18,10 @@ public class Page {
     @Column(nullable = false)
     private int id;
 
-    @Column(name = "site_id", nullable = false)
-    private int siteId;
+    //@Column(name = "site_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "site_id")
+    private model.Site site;
 
     @NaturalId
     @Column(columnDefinition = "TEXT", nullable = false, unique = true)
