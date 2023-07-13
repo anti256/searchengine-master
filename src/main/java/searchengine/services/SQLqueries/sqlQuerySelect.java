@@ -11,7 +11,7 @@ import java.util.List;
 
 public abstract class sqlQuerySelect {
 
-    public static ResultSet selectBD(String query){
+    public static ResultSet selectBD(String query) {
         Connection connection;
         try {
             connection = DriverManager.getConnection(
@@ -19,14 +19,17 @@ public abstract class sqlQuerySelect {
             //connection.createStatement().execute("SELECT * FROM SITE WHERE STATUS = 'INDEXING'");
             ResultSet result = connection.createStatement().executeQuery(query);
             connection.close();
-            return  result;
+            return result;
         } catch (SQLException e) {
             e.printStackTrace();
-        };
+        }
+        ;
         return null;
     }
+}
 
-    public static ArrayList<Integer> findIDfilesFromCfg(List<Site> list){
+    /*
+    public static ArrayList<Integer> findIDfilesFromCfg(List<Site> list) throws SQLException {
         Connection connection;
         try {
             connection = DriverManager.getConnection(
@@ -50,6 +53,7 @@ public abstract class sqlQuerySelect {
 } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+       */
 /*while (results.next()) {
         	Integer id = results.getInt(“id”);
         	String name = results.getString(“name”);

@@ -2,7 +2,9 @@ package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
 import model.StatusIndexing;
+import org.hibernate.Criteria;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
@@ -35,29 +37,44 @@ public class SiteIndexingImpl implements SiteIndexing{
         List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
         Transaction transaction = session.beginTransaction();
         ArrayList<Integer> indexArray = new ArrayList<Integer>();//список id из БД сайтов из заполненного list'а
+        ArrayList<model.Site> sitesCfgFromBD  = new ArrayList<>();//сущности из БД, соответствующие сайтам из файла конфигурации
 
-
-
-
-
+        new addAnotherDBrecords();//добавление в БД записей для отработки
 
         for (int i = 0; i < sitesList.size(); i++) {//наполнение списка с id из БД сайтов из заполненного list'а
-            String indexFindQuery = "from " + model.Site.class.getSimpleName()
+            System.out.println("Наполнение списка сущностями из БД по файлу конфигурации, итерация - " + i);
+            /*String indexFindQuery = "from " + model.Site.class.getSimpleName()
                     + " sites where sites.url = \'" + sitesList.get(i).getUrl() + "\'";
             System.out.println(indexArray);
             Query query = session.createQuery(indexFindQuery);
-            List<model.Site> queryResults = query.list();
-            for (model.Site st:queryResults) {
-                if (st.getStatus().equals(StatusIndexing.INDEXING)){
-                    response.put("result", false);
-                    response.put("error", "Индексация уже запущена");
-                    transaction.commit();
-                    return response;
-                }
-                indexArray.add(st.getId());
-            }
+            List<model.Site> queryResults = query.list();//список с сущностями из БД, соответствующими сайтам из файла конфигурации
+*/
+            //session.get(Site.class, id)
+
+            Criteria urlCriteria = session.createCriteria(Site.class);
+            urlCriteria.add(Restrictions.eq("url", sitesList.get(i).getUrl()));
+            //model.Site defaultSite = (model.Site) urlCriteria.uniqueResult();
+            List<model.Site> defaultList = urlCriteria.list();
+            System.out.println("defaultList.size = " + defaultList.size());
+            //sitesCfgFromBD.addAll((List<model.Site>)urlCriteria.list());//на случай нескольких записей с одной url
+            sitesCfgFromBD.addAll(defaultList);
+            System.out.println("sitesCfgFromBD.size = " + sitesCfgFromBD.size());
         }
-        new addAnotherDBrecords(sitesList);//добавление в БД записей для отработки
+        System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
+        for (model.Site st:sitesCfgFromBD) {//проверка что индексация уже запущена
+            System.out.println("Начало итерации проверки на запущенность");
+            if (st.getStatus().equals(StatusIndexing.INDEXING)){
+                response.put("result", false);
+                response.put("error", "Индексация уже запущена");
+                transaction.commit();
+                return response;
+            }
+            System.out.println("До удаления");
+            session.delete(st);
+            System.out.println("После удаления");
+        }
+
+
 
        /* for (int i = 0; i < sitesList.size(); i++){
             String sqlDefaultQuery = "select id from site where url = \'" + sitesList.get(i).getUrl() + "\'";
@@ -70,14 +87,14 @@ public class SiteIndexingImpl implements SiteIndexing{
             // indexArray.addAll(rs.getArray("id"));
         }*/
 
-        System.out.println("---------------");
+   /*     System.out.println("---------------");
          for (int i = indexArray.size()-1; i > -1 ; i--) {//очистка БД по найденным id
             String hqlPages = "delete " + model.Page.class.getSimpleName() + " where siteId = " + indexArray.get(i);
             session.createQuery(hqlPages).executeUpdate();
             String hql = "delete " + model.Site.class.getSimpleName() + " where id = " + indexArray.get(i);
             System.out.println(hql);
             session.createQuery(hql).executeUpdate();
-         }
+         }*/
         response.put("result", true);
         transaction.commit();
         return response;
