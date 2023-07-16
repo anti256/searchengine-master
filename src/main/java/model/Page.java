@@ -19,9 +19,9 @@ public class Page {
     private int id;
 
     //@Column(name = "site_id", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "site_id")
-    private model.Site site;
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "site_id", referencedColumnName = "id")
+    private model.Site site1;
 
     @NaturalId
     @Column(columnDefinition = "TEXT", nullable = false, unique = true)

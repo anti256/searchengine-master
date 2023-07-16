@@ -7,16 +7,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="searchengine-master" />
+        <module name="SearchEngine" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="searchengine-master" target="17" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="searchengine-master" options="-parameters" />
+      <module name="SearchEngine" options="-parameters" />
     </option>
   </component>
 </project>

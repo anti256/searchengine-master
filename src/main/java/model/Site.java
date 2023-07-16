@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "site")
@@ -32,6 +33,9 @@ public class Site {
 
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
     private String name;
+
+    @OneToMany(mappedBy = "site1", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<Page> pages;
 
 }
 /*

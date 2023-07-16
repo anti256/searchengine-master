@@ -13,6 +13,9 @@ import searchengine.config.SitesList;
 //import searchengine.SessionFactoryCreate;
 //import model.Site;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.transaction.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,79 +29,84 @@ import static searchengine.services.SQLqueries.sqlQuerySelect.selectBD;
 public class SiteIndexingImpl implements SiteIndexing{
     boolean indexingState = false;
     private final SitesList sites;
-    //List<Site> sitesList = sites.getSites();
-
+    ArrayList<model.Page> pagesCfgFromBD  = new ArrayList<>();
 
 
     @Override
     public JSONObject startSitesIndexing()
             throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
         JSONObject response = new JSONObject();//создание json-объекта
-        List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
         Transaction transaction = session.beginTransaction();
-        ArrayList<Integer> indexArray = new ArrayList<Integer>();//список id из БД сайтов из заполненного list'а
+        List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
+        if (isIndexing()) {
+            response.put("result", false);
+            response.put("error", "Индексация уже запущена");
+            transaction.commit();
+            return response;
+        }
         ArrayList<model.Site> sitesCfgFromBD  = new ArrayList<>();//сущности из БД, соответствующие сайтам из файла конфигурации
 
         new addAnotherDBrecords();//добавление в БД записей для отработки
 
         for (int i = 0; i < sitesList.size(); i++) {//наполнение списка с id из БД сайтов из заполненного list'а
             System.out.println("Наполнение списка сущностями из БД по файлу конфигурации, итерация - " + i);
-            /*String indexFindQuery = "from " + model.Site.class.getSimpleName()
-                    + " sites where sites.url = \'" + sitesList.get(i).getUrl() + "\'";
-            System.out.println(indexArray);
-            Query query = session.createQuery(indexFindQuery);
-            List<model.Site> queryResults = query.list();//список с сущностями из БД, соответствующими сайтам из файла конфигурации
-*/
-            //session.get(Site.class, id)
 
-            Criteria urlCriteria = session.createCriteria(Site.class);
-            urlCriteria.add(Restrictions.eq("url", sitesList.get(i).getUrl()));
-            //model.Site defaultSite = (model.Site) urlCriteria.uniqueResult();
-            List<model.Site> defaultList = urlCriteria.list();
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<model.Site> critQuery = builder.createQuery(model.Site.class);
+            Root<model.Site> root = critQuery.from(model.Site.class);
+            critQuery.select(root).where(builder.equal(root.get("url"), sitesList.get(i).getUrl()));
+            Query<model.Site> query = session.createQuery(critQuery);
+            List<model.Site> defaultList = query.getResultList();
+
             System.out.println("defaultList.size = " + defaultList.size());
-            //sitesCfgFromBD.addAll((List<model.Site>)urlCriteria.list());//на случай нескольких записей с одной url
             sitesCfgFromBD.addAll(defaultList);
             System.out.println("sitesCfgFromBD.size = " + sitesCfgFromBD.size());
         }
         System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
-        for (model.Site st:sitesCfgFromBD) {//проверка что индексация уже запущена
-            System.out.println("Начало итерации проверки на запущенность");
-            if (st.getStatus().equals(StatusIndexing.INDEXING)){
-                response.put("result", false);
-                response.put("error", "Индексация уже запущена");
-                transaction.commit();
-                return response;
-            }
+        for (int i = sitesCfgFromBD.size()-1; i > -1 ; i--) {
+            System.out.println("Начало итерации удаления");
+            pagesCfgFromBD.addAll(loadPagesFromBD(sitesCfgFromBD.get(i)));
+
             System.out.println("До удаления");
-            session.delete(st);
+            session.remove(sitesCfgFromBD.get(i));
+            //sitesCfgFromBD.remove(sitesCfgFromBD.get(i));
+            session.flush();
             System.out.println("После удаления");
+        }
+        System.out.println("Удаление Pages");
+        for (int i = pagesCfgFromBD.size()-1; i > -1 ; i--) {
+            session.remove(pagesCfgFromBD.get(i));
+            session.flush();
         }
 
 
-
-       /* for (int i = 0; i < sitesList.size(); i++){
-            String sqlDefaultQuery = "select id from site where url = \'" + sitesList.get(i).getUrl() + "\'";
-            ResultSet rs = selectBD(sqlDefaultQuery);
-            try {
-                System.out.println("---" + rs.getArray("id"));
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-            // indexArray.addAll(rs.getArray("id"));
-        }*/
-
-   /*     System.out.println("---------------");
-         for (int i = indexArray.size()-1; i > -1 ; i--) {//очистка БД по найденным id
-            String hqlPages = "delete " + model.Page.class.getSimpleName() + " where siteId = " + indexArray.get(i);
-            session.createQuery(hqlPages).executeUpdate();
-            String hql = "delete " + model.Site.class.getSimpleName() + " where id = " + indexArray.get(i);
-            System.out.println(hql);
-            session.createQuery(hql).executeUpdate();
-         }*/
         response.put("result", true);
         transaction.commit();
         return response;
     }
+
+    private Boolean isIndexing (){
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<model.Site> critQuery = builder.createQuery(model.Site.class);
+        Root<model.Site> root = critQuery.from(model.Site.class);
+        critQuery.select(root).where(builder.equal(root.get("status"), StatusIndexing.INDEXING));
+        Query<model.Site> query = session.createQuery(critQuery);
+        List<model.Site> indexingSitesFromBD = query.getResultList();
+        if (indexingSitesFromBD.size() > 0){
+            return true;
+        }
+        return false;
+    }
+
+    private List<model.Page> loadPagesFromBD (model.Site site){
+        CriteriaBuilder builder = session.getCriteriaBuilder();
+        CriteriaQuery<model.Page> critQuery = builder.createQuery(model.Page.class);
+        Root<model.Page> root = critQuery.from(model.Page.class);
+        critQuery.select(root).where(builder.equal(root.get("site1"), site.getId()));
+        Query<model.Page> query = session.createQuery(critQuery);
+        return query.getResultList();
+    }
+
 }
 /*
 ●	В сервисе индексации сайтов пропишите код, который будет брать из конфигурации приложения список сайтов и по каждому сайту:

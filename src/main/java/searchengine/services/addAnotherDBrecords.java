@@ -68,8 +68,8 @@ public class addAnotherDBrecords {
             model.Page defaultPage2 = new model.Page();
             defaultPage1.setCode(200);
             defaultPage2.setCode(200);
-            defaultPage1.setSite(fromDBsites.get(i));
-            defaultPage2.setSite(fromDBsites.get(i));
+            defaultPage1.setSite1(fromDBsites.get(i));
+            defaultPage2.setSite1(fromDBsites.get(i));
             defaultPage1.setContent("anything");
             defaultPage2.setContent("anything");
             defaultPage1.setPath("/news" + i + "/01");
