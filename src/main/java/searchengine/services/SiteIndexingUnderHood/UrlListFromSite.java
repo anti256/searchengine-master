@@ -1,4 +1,4 @@
-package searchengine.services;
+package searchengine.services.SiteIndexingUnderHood;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

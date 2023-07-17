@@ -2,14 +2,13 @@ package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
 import model.StatusIndexing;
-import org.hibernate.Criteria;
 import org.hibernate.Transaction;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
+import searchengine.services.SiteIndexingUnderHood.BeforeIndexing;
 //import searchengine.SessionFactoryCreate;
 //import model.Site;
 
@@ -17,19 +16,16 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.transaction.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import static searchengine.Application.session;
-import static searchengine.services.SQLqueries.sqlQuerySelect.selectBD;
 
 @Service
 @RequiredArgsConstructor
 public class SiteIndexingImpl implements SiteIndexing{
     boolean indexingState = false;
     private final SitesList sites;
-    ArrayList<model.Page> pagesCfgFromBD  = new ArrayList<>();
+    //ArrayList<model.Page> pagesCfgFromBD  = new ArrayList<>();
 
 
     @Override
@@ -38,7 +34,7 @@ public class SiteIndexingImpl implements SiteIndexing{
         JSONObject response = new JSONObject();//создание json-объекта
         Transaction transaction = session.beginTransaction();
         List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
-        if (isIndexing()) {
+        if (BeforeIndexing.isIndexing()) {
             response.put("result", false);
             response.put("error", "Индексация уже запущена");
             transaction.commit();
@@ -48,36 +44,13 @@ public class SiteIndexingImpl implements SiteIndexing{
 
         new addAnotherDBrecords();//добавление в БД записей для отработки
 
-        for (int i = 0; i < sitesList.size(); i++) {//наполнение списка с id из БД сайтов из заполненного list'а
-            System.out.println("Наполнение списка сущностями из БД по файлу конфигурации, итерация - " + i);
-
-            CriteriaBuilder builder = session.getCriteriaBuilder();
-            CriteriaQuery<model.Site> critQuery = builder.createQuery(model.Site.class);
-            Root<model.Site> root = critQuery.from(model.Site.class);
-            critQuery.select(root).where(builder.equal(root.get("url"), sitesList.get(i).getUrl()));
-            Query<model.Site> query = session.createQuery(critQuery);
-            List<model.Site> defaultList = query.getResultList();
-
-            System.out.println("defaultList.size = " + defaultList.size());
-            sitesCfgFromBD.addAll(defaultList);
-            System.out.println("sitesCfgFromBD.size = " + sitesCfgFromBD.size());
-        }
+        sitesCfgFromBD.addAll(BeforeIndexing.loadSitesFromBDbyCFG(sitesList));//Наполнение списка сущностями из БД по файлу конфигурации
+        System.out.println("sitesCfgFromBD.size = " + sitesCfgFromBD.size());
         System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
-        for (int i = sitesCfgFromBD.size()-1; i > -1 ; i--) {
-            System.out.println("Начало итерации удаления");
-            pagesCfgFromBD.addAll(loadPagesFromBD(sitesCfgFromBD.get(i)));
+        BeforeIndexing.deleteFromBD(sitesCfgFromBD);//удаление всех сущностей по файлу конфигурации
 
-            System.out.println("До удаления");
-            session.remove(sitesCfgFromBD.get(i));
-            //sitesCfgFromBD.remove(sitesCfgFromBD.get(i));
-            session.flush();
-            System.out.println("После удаления");
-        }
-        System.out.println("Удаление Pages");
-        for (int i = pagesCfgFromBD.size()-1; i > -1 ; i--) {
-            session.remove(pagesCfgFromBD.get(i));
-            session.flush();
-        }
+
+
 
 
         response.put("result", true);
@@ -85,27 +58,9 @@ public class SiteIndexingImpl implements SiteIndexing{
         return response;
     }
 
-    private Boolean isIndexing (){
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<model.Site> critQuery = builder.createQuery(model.Site.class);
-        Root<model.Site> root = critQuery.from(model.Site.class);
-        critQuery.select(root).where(builder.equal(root.get("status"), StatusIndexing.INDEXING));
-        Query<model.Site> query = session.createQuery(critQuery);
-        List<model.Site> indexingSitesFromBD = query.getResultList();
-        if (indexingSitesFromBD.size() > 0){
-            return true;
-        }
-        return false;
-    }
 
-    private List<model.Page> loadPagesFromBD (model.Site site){
-        CriteriaBuilder builder = session.getCriteriaBuilder();
-        CriteriaQuery<model.Page> critQuery = builder.createQuery(model.Page.class);
-        Root<model.Page> root = critQuery.from(model.Page.class);
-        critQuery.select(root).where(builder.equal(root.get("site1"), site.getId()));
-        Query<model.Page> query = session.createQuery(critQuery);
-        return query.getResultList();
-    }
+
+
 
 }
 /*

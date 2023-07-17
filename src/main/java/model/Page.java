@@ -3,6 +3,8 @@ package model;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 
 import javax.persistence.*;
@@ -21,6 +23,7 @@ public class Page {
     //@Column(name = "site_id", nullable = false)
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "site_id", referencedColumnName = "id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private model.Site site1;
 
     @NaturalId
