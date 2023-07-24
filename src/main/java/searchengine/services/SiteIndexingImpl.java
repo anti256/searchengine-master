@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.services.SiteIndexingUnderHood.BeforeIndexing;
+import searchengine.services.SiteIndexingUnderHood.UrlListFromSite;
 //import searchengine.SessionFactoryCreate;
 //import model.Site;
 
@@ -16,7 +17,9 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.transaction.*;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import static searchengine.Application.session;
 
@@ -30,7 +33,8 @@ public class SiteIndexingImpl implements SiteIndexing{
 
     @Override
     public JSONObject startSitesIndexing()
-            throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
+            throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException,
+            SQLIntegrityConstraintViolationException {
         JSONObject response = new JSONObject();//создание json-объекта
         Transaction transaction = session.beginTransaction();
         List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
@@ -41,6 +45,7 @@ public class SiteIndexingImpl implements SiteIndexing{
             return response;
         }
         ArrayList<model.Site> sitesCfgFromBD  = new ArrayList<>();//сущности из БД, соответствующие сайтам из файла конфигурации
+        transaction.commit();
 
         new addAnotherDBrecords();//добавление в БД записей для отработки
 
@@ -48,10 +53,24 @@ public class SiteIndexingImpl implements SiteIndexing{
         System.out.println("sitesCfgFromBD.size = " + sitesCfgFromBD.size());
         System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
         BeforeIndexing.deleteFromBD(sitesCfgFromBD);//удаление всех сущностей по файлу конфигурации
+       for (int i = 0; i < sitesCfgFromBD.size(); i++) {
+           transaction.begin();
+           model.Site defSite = new model.Site();
+           defSite.setName(sitesCfgFromBD.get(i).getName());
+           defSite.setUrl(sitesCfgFromBD.get(i).getUrl());
+           defSite.setStatus(StatusIndexing.INDEXING);
+           defSite.setStatusTime(new Date());
+            session.persist(defSite);
+            transaction.commit();
+           System.out.println("url = " + defSite.getUrl() + ", defSite.getId() - " + defSite.getId());
+           ArrayList<String> pageUrl = new ArrayList<>();
+          // UrlListFromSite ulfs = new UrlListFromSite(defSite);
+           pageUrl.addAll((new UrlListFromSite(defSite)).getUrlReadyList());
+           transaction.begin();
+           defSite.setStatus(StatusIndexing.INDEXED);
+           transaction.commit();
 
-
-
-
+        }
 
         response.put("result", true);
         transaction.commit();

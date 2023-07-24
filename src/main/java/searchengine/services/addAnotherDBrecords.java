@@ -1,8 +1,10 @@
 package searchengine.services;
 
 import model.StatusIndexing;
+import org.hibernate.Transaction;
 import searchengine.config.Site;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +16,7 @@ import static searchengine.Application.session;
 public class addAnotherDBrecords {
 
     public addAnotherDBrecords() {
+        Transaction transaction = session.beginTransaction();
         System.out.println("Начало наполнения таблицы левыми данными");
        /* for (int i = 0; i < inputArray.size(); i++) {
             model.Site defaultSite = new model.Site();
@@ -78,7 +81,17 @@ public class addAnotherDBrecords {
             session.persist(defaultPage2);
             System.out.println("fromDBsites - " + fromDBsites.get(i).getName());
         }
+
+        /*model.Page defaultPage = new model.Page();
+        defaultPage.setCode(200);
+        defaultPage.setSite1(fromDBsites.get(7));
+        defaultPage.setContent("anything");
+        defaultPage.setPath("/news7/01");
+        session.persist(defaultPage);*/
+
+
         System.out.println("Окончание наполнения таблицы левыми данными");
+        transaction.commit();
 
     }
 

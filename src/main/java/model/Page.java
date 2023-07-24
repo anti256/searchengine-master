@@ -28,7 +28,6 @@ public class Page {
 
     @NaturalId
     @Column(columnDefinition = "TEXT", nullable = false, unique = true)
-    //@org.hibernate.annotations.Table(name="Forest", indexes = { @Index(name="idx", columnNames = { "name", "length" } ) } )
     private String path;
 
     @Column(nullable = false)

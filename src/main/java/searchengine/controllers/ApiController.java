@@ -15,6 +15,7 @@ import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 @RestController
 @RequestMapping("/api")
@@ -35,7 +36,7 @@ public class ApiController {
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<JSONObject> startIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException {
+    public ResponseEntity<JSONObject> startIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException, SQLIntegrityConstraintViolationException {
         return new ResponseEntity<>(siteIndexing.startSitesIndexing(),HttpStatus.OK);
     }
 

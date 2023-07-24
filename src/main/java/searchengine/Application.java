@@ -32,7 +32,7 @@ public class Application {
         try {
             connection = DriverManager.getConnection(
                             "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
-            connection.createStatement().execute("ALTER TABLE PAGE ADD INDEX (path(200))");
+            connection.createStatement().execute("ALTER TABLE PAGE ADD UNIQUE INDEX (path(200))");
             connection.createStatement().execute("DELETE FROM SITE");
             connection.createStatement().execute("DELETE FROM PAGE");
             connection.close();

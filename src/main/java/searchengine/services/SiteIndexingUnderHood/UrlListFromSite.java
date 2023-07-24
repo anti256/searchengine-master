@@ -1,4 +1,6 @@
 package searchengine.services.SiteIndexingUnderHood;
+import model.Page;
+import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,13 +12,16 @@ import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
+import static searchengine.Application.session;
+
 public class UrlListFromSite {
 
     private String urlSite;//начальная ссылка поиска
     private ArrayList<String> urlReadyList = new ArrayList<>(); //список обработанных ссылок, который будет на выходе
     private volatile ArrayList<String> todoTaskList = new ArrayList<>();//список необработанных ссылок
 
-    public UrlListFromSite(String urlString){//конструктор
+    public UrlListFromSite(model.Site site){//конструктор
+        String urlString = site.getUrl();
         urlSite = urlString.replaceAll("www.","");//убираем из ссылки www
         todoTaskList.add(urlSite);//добавляем ссылку в список на выполнение
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();//очередь
@@ -27,6 +32,17 @@ public class UrlListFromSite {
                     //строку-ссылку присваиваем переменной, чтоб далее программа не тратила время на открытие списка
                     String defaultUrl = todoTaskList.get(0);
                     urlReadyList.add(defaultUrl);//заносим ссылку в список обработанных
+
+                    Transaction transaction = session.beginTransaction();
+                    model.Page defPage = new Page();
+                    defPage.setSite1(site);
+                    defPage.setCode(200);
+                    defPage.setPath((defaultUrl.replaceAll(urlSite,  "").equals("")) ? defaultUrl :
+                            defaultUrl.replaceAll(urlSite,  ""));
+                    defPage.setContent(" ");
+                    session.persist(defPage);
+                    transaction.commit();
+
                     //connect - подключение к html в инете, get - парсинг, создается документ,
                     // maxBodySize(0) - снимает ограничение на размер скачиваемых данных
                     Document doc = Jsoup.connect(defaultUrl).maxBodySize(0).get();
@@ -63,7 +79,7 @@ public class UrlListFromSite {
         @Override
         protected List<String> compute() {//тело задачи, тип - то, что на выходе
             List<String> urlReadyToTodo = new ArrayList<>();//локальный список правильных обработанных ссылок
-            if (elements.size() < 4){//если в локальном списке задач элементов меньше 50
+            if (elements.size() < 4){//если в локальном списке задач элементов меньше 4
                 for (Element el:elements) {//перебор элементов
                     String urlStr = el.absUrl("href");//из конкретного элемента вытаскиваем ссылку
                     urlStr = urlStr.replaceAll("www.", "");//убираем www из ссылки
@@ -76,8 +92,8 @@ public class UrlListFromSite {
                             //проверяем на наличие полученной ссылки в списках обработанных и необработанных ссылок
                             if ((!urlReadyList.contains(urlStr)) && (!todoTaskList.contains(urlStr))) {
                                 urlReadyToTodo.add(urlStr);//добаляем ссылку в список необработанных
-//                                      System.out.println(urlReadyList.size() + "---" + urlStr + "\t\t" + Thread.currentThread().getName() + "=== " +
-//                                                todoTaskList.size());
+                                      System.out.println(urlReadyList.size() + "---" + urlStr + "\t\t" + Thread.currentThread().getName() + "=== " +
+                                                todoTaskList.size());
                             }
                         }
                     }

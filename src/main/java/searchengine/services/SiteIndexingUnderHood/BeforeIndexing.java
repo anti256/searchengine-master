@@ -2,6 +2,7 @@ package searchengine.services.SiteIndexingUnderHood;
 
 import model.Site;
 import model.StatusIndexing;
+import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -29,8 +30,7 @@ public abstract class BeforeIndexing {
             return result;
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-        ;
+        };
         return null;
     }
 
@@ -57,6 +57,7 @@ public abstract class BeforeIndexing {
     }
 
     public static ArrayList<Site> loadSitesFromBDbyCFG (List<searchengine.config.Site> sitesList){
+        Transaction transaction = session.beginTransaction();
         ArrayList<Site> defaultSiteList = new ArrayList<>();
         for (int i = 0; i < sitesList.size(); i++) {//наполнение списка с id из БД сайтов из заполненного list'а
             System.out.println("Наполнение списка сущностями из БД по файлу конфигурации, итерация - " + i);
@@ -70,10 +71,12 @@ public abstract class BeforeIndexing {
             System.out.println("defaultList.size = " + defaultList.size());
             defaultSiteList.addAll(defaultList);
         }
+        transaction.commit();
         return defaultSiteList;
     }
 
     public static void deleteFromBD (ArrayList<model.Site> sitesCfgFromBD){
+        Transaction transaction = session.beginTransaction();
         ArrayList<model.Page> pagesCfgFromBD  = new ArrayList<>();
         for (int i = sitesCfgFromBD.size()-1; i > -1 ; i--) {
             System.out.println("Начало итерации удаления");
@@ -83,6 +86,7 @@ public abstract class BeforeIndexing {
             session.flush();
             System.out.println("После удаления");
         }
+        transaction.commit();
     }
     /*System.out.println("Удаление Pages");
         for (int i = pagesCfgFromBD.size()-1; i > -1 ; i--) {
