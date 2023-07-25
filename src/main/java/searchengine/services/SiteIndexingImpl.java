@@ -3,7 +3,6 @@ package searchengine.services;
 import lombok.RequiredArgsConstructor;
 import model.StatusIndexing;
 import org.hibernate.Transaction;
-import org.hibernate.query.Query;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
@@ -13,9 +12,6 @@ import searchengine.services.SiteIndexingUnderHood.UrlListFromSite;
 //import searchengine.SessionFactoryCreate;
 //import model.Site;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import javax.transaction.*;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
@@ -44,20 +40,20 @@ public class SiteIndexingImpl implements SiteIndexing{
             transaction.commit();
             return response;
         }
-        ArrayList<model.Site> sitesCfgFromBD  = new ArrayList<>();//сущности из БД, соответствующие сайтам из файла конфигурации
+        ArrayList<model.Site> sitesEntityFromCfg = new ArrayList<>();//сущности из БД, соответствующие сайтам из файла конфигурации
         transaction.commit();
 
         new addAnotherDBrecords();//добавление в БД записей для отработки
 
-        sitesCfgFromBD.addAll(BeforeIndexing.loadSitesFromBDbyCFG(sitesList));//Наполнение списка сущностями из БД по файлу конфигурации
-        System.out.println("sitesCfgFromBD.size = " + sitesCfgFromBD.size());
+        sitesEntityFromCfg.addAll(BeforeIndexing.loadSitesFromBDbyCFGorCreateNew(sitesList));//Наполнение списка сущностями из БД по файлу конфигурации либо создание новых
+        System.out.println("sitesEntityFromCfg.size = " + sitesEntityFromCfg.size());
         System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
-        BeforeIndexing.deleteFromBD(sitesCfgFromBD);//удаление всех сущностей по файлу конфигурации
-       for (int i = 0; i < sitesCfgFromBD.size(); i++) {
+        BeforeIndexing.deleteFromBD(sitesEntityFromCfg);//удаление всех сущностей по файлу конфигурации
+       for (int i = 0; i < sitesEntityFromCfg.size(); i++) {
            transaction.begin();
            model.Site defSite = new model.Site();
-           defSite.setName(sitesCfgFromBD.get(i).getName());
-           defSite.setUrl(sitesCfgFromBD.get(i).getUrl());
+           defSite.setName(sitesEntityFromCfg.get(i).getName());
+           defSite.setUrl(sitesEntityFromCfg.get(i).getUrl());
            defSite.setStatus(StatusIndexing.INDEXING);
            defSite.setStatusTime(new Date());
             session.persist(defSite);
@@ -73,7 +69,7 @@ public class SiteIndexingImpl implements SiteIndexing{
         }
 
         response.put("result", true);
-        transaction.commit();
+        //transaction.commit();
         return response;
     }
 

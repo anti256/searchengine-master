@@ -13,6 +13,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static searchengine.Application.session;
@@ -56,7 +57,7 @@ public abstract class BeforeIndexing {
         return query.getResultList();
     }
 
-    public static ArrayList<Site> loadSitesFromBDbyCFG (List<searchengine.config.Site> sitesList){
+    public static ArrayList<Site> loadSitesFromBDbyCFGorCreateNew(List<searchengine.config.Site> sitesList){
         Transaction transaction = session.beginTransaction();
         ArrayList<Site> defaultSiteList = new ArrayList<>();
         for (int i = 0; i < sitesList.size(); i++) {//наполнение списка с id из БД сайтов из заполненного list'а
@@ -70,6 +71,17 @@ public abstract class BeforeIndexing {
 
             System.out.println("defaultList.size = " + defaultList.size());
             defaultSiteList.addAll(defaultList);
+        }
+        if (defaultSiteList.size() == 0) {
+            for (int i = 0; i < sitesList.size(); i++) {
+                model.Site defaultSite = new model.Site();
+                defaultSite.setUrl(sitesList.get(i).getUrl());
+                defaultSite.setName(sitesList.get(i).getName());
+                defaultSite.setStatus(StatusIndexing.INDEXED);
+                defaultSite.setStatusTime(new Date());
+                session.persist(defaultSite);
+                defaultSiteList.add(defaultSite);
+            }
         }
         transaction.commit();
         return defaultSiteList;

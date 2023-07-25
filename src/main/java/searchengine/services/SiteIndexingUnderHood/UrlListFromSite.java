@@ -37,7 +37,7 @@ public class UrlListFromSite {
                     model.Page defPage = new Page();
                     defPage.setSite1(site);
                     defPage.setCode(200);
-                    defPage.setPath((defaultUrl.replaceAll(urlSite,  "").equals("")) ? defaultUrl :
+                    defPage.setPath((defaultUrl.replaceAll(urlSite,  "").equals("")) ? "/" :
                             defaultUrl.replaceAll(urlSite,  ""));
                     defPage.setContent(" ");
                     session.persist(defPage);
