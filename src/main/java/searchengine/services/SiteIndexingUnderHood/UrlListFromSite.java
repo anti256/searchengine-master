@@ -7,6 +7,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
@@ -19,14 +20,20 @@ public class UrlListFromSite {
     private String urlSite;//начальная ссылка поиска
     private ArrayList<String> urlReadyList = new ArrayList<>(); //список обработанных ссылок, который будет на выходе
     private volatile ArrayList<String> todoTaskList = new ArrayList<>();//список необработанных ссылок
+    private model.Site site;
 
     public UrlListFromSite(model.Site site){//конструктор
+        this.site = site;
         String urlString = site.getUrl();
-        urlSite = urlString.replaceAll("www.","");//убираем из ссылки www
-        todoTaskList.add(urlSite);//добавляем ссылку в список на выполнение
+        urlSite = urlString.replaceAll("www.","");//убираем из ссылки www     https://www.mtrele.ru -> https://mtrele.ru
+        todoTaskList.add(urlSite);//добавляем ссылку в список на выполнение                                            https://mtrele.ru
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();//очередь
         while (!todoTaskList.isEmpty()) {//работаем пока список необработанных ссылок не пустой
-            if (!urlReadyList.contains(todoTaskList.get(0))){//проверяем, что первой ссылки нет в списке обработанных ссылок
+            String minusStart = todoTaskList.get(0).replaceAll(urlSite, "").equals("") ? "/":
+                    todoTaskList.get(0).replaceAll(urlSite, "") ;
+            if (!isExistInPageBDbyUrl(minusStart, site.getId()))
+                    //!urlReadyList.contains(todoTaskList.get(0)))
+            {//проверяем, что первой ссылки нет в списке обработанных ссылок
                 try {
                     //вытаскиваем первую в списке ссылку
                     //строку-ссылку присваиваем переменной, чтоб далее программа не тратила время на открытие списка
@@ -40,6 +47,7 @@ public class UrlListFromSite {
                     defPage.setPath((defaultUrl.replaceAll(urlSite,  "").equals("")) ? "/" :
                             defaultUrl.replaceAll(urlSite,  ""));
                     defPage.setContent(" ");
+                    System.out.println("++++Заносится в базу" + defPage.getPath() + ", site - " + defPage.getSite1().getId());
                     session.persist(defPage);
                     transaction.commit();
 
@@ -79,7 +87,8 @@ public class UrlListFromSite {
         @Override
         protected List<String> compute() {//тело задачи, тип - то, что на выходе
             List<String> urlReadyToTodo = new ArrayList<>();//локальный список правильных обработанных ссылок
-            if (elements.size() < 4){//если в локальном списке задач элементов меньше 4
+
+            if (elements.size() < 2){//если в локальном списке задач элементов меньше 2, т.е. для каждого элемента делаем свой поток
                 for (Element el:elements) {//перебор элементов
                     String urlStr = el.absUrl("href");//из конкретного элемента вытаскиваем ссылку
                     urlStr = urlStr.replaceAll("www.", "");//убираем www из ссылки
@@ -90,7 +99,9 @@ public class UrlListFromSite {
                         String minusResh = urlStr.replaceAll("[^#]+[#]{1}[^#]*", "");
                         if (!minusResh.equals("")) {
                             //проверяем на наличие полученной ссылки в списках обработанных и необработанных ссылок
-                            if ((!urlReadyList.contains(urlStr)) && (!todoTaskList.contains(urlStr))) {
+                            if ((!isExistInPageBDbyUrl(urlStr, site.getId())
+                                    //!urlReadyList.contains(urlStr)
+                        ) && (!todoTaskList.contains(urlStr))) {
                                 urlReadyToTodo.add(urlStr);//добаляем ссылку в список необработанных
                                       System.out.println(urlReadyList.size() + "---" + urlStr + "\t\t" + Thread.currentThread().getName() + "=== " +
                                                 todoTaskList.size());
@@ -102,8 +113,8 @@ public class UrlListFromSite {
                 try {//создаем две подзадачи, каждому свою часть списка
                     int a1 = elements.size() / 2;
                     int b = elements.size() - 1;
-                    TaskUrlSite firstPart = new TaskUrlSite(elements.subList(0, a1));
-                    TaskUrlSite secondPart = new TaskUrlSite(elements.subList(a1 + 1, b));
+                    TaskUrlSite firstPart = new TaskUrlSite(elements.subList(0, a1 - 1));
+                    TaskUrlSite secondPart = new TaskUrlSite(elements.subList(a1, b));
                     firstPart.fork();//добавляем задачи в пул
                     secondPart.fork();
                     urlReadyToTodo.addAll(secondPart.join());//запускаем задачи и добавляем их результаты в локальный список
@@ -112,9 +123,30 @@ public class UrlListFromSite {
                     e.printStackTrace();
                 }
             }//end of else
+
             return urlReadyToTodo;//возвращаем локальный список
         }//конец тела задачи
 
     }//конец класс-поток-task
+
+    public Boolean isExistInPageBDbyUrl (String url, int id) {
+        try {
+            Connection connection = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
+            //connection.createStatement().execute("ALTER TABLE PAGE ADD UNIQUE INDEX (path(200))");
+            String query = "SELECT * FROM PAGE WHERE PATH = \'" + url + "\' and site_id = " + id;
+            System.out.println(query);
+            ResultSet rs = connection.createStatement().executeQuery(query);
+            if (!rs.isBeforeFirst()){
+                connection.close();
+                return false;
+            }
+            connection.close();
+        } catch (
+                SQLException e) {
+            e.printStackTrace();
+        }        ;
+    return true;
+    }
 
 }
