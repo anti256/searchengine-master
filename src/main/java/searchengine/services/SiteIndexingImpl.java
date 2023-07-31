@@ -1,11 +1,11 @@
 package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
+import model.Site;
 import model.StatusIndexing;
 import org.hibernate.Transaction;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
-import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.services.SiteIndexingUnderHood.BeforeIndexing;
 import searchengine.services.SiteIndexingUnderHood.UrlListFromSite;
@@ -33,7 +33,7 @@ public class SiteIndexingImpl implements SiteIndexing{
             SQLIntegrityConstraintViolationException {
         JSONObject response = new JSONObject();//создание json-объекта
         Transaction transaction = session.beginTransaction();
-        List<Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
+        List<searchengine.config.Site> sitesList = sites.getSites();//заполнение list'а сайтами из файла конфигурации
         if (BeforeIndexing.isIndexing()) {
             response.put("result", false);
             response.put("error", "Индексация уже запущена");
@@ -48,7 +48,8 @@ public class SiteIndexingImpl implements SiteIndexing{
         sitesEntityFromCfg.addAll(BeforeIndexing.loadSitesFromBDbyCFGorCreateNew(sitesList));//Наполнение списка сущностями из БД по файлу конфигурации либо создание новых
         System.out.println("sitesEntityFromCfg.size = " + sitesEntityFromCfg.size());
         System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
-        BeforeIndexing.deleteFromBD(sitesEntityFromCfg);//удаление всех сущностей по файлу конфигурации
+        //BeforeIndexing.deleteFromBD(sitesEntityFromCfg);//удаление всех сущностей по файлу конфигурации
+        BeforeIndexing.deleteFromBD(sitesList);
        for (int i = 0; i < sitesEntityFromCfg.size(); i++) {
            transaction.begin();
            model.Site defSite = new model.Site();
@@ -61,9 +62,11 @@ public class SiteIndexingImpl implements SiteIndexing{
            System.out.println("url = " + defSite.getUrl() + ", defSite.getId() - " + defSite.getId());
            ArrayList<String> pageUrl = new ArrayList<>();
           // UrlListFromSite ulfs = new UrlListFromSite(defSite);
-           pageUrl.addAll((new UrlListFromSite(defSite)).getUrlReadyList());
+           Boolean boo = (new UrlListFromSite(defSite)).getUrlReadyList();
+           //pageUrl.addAll((new UrlListFromSite(defSite)).getUrlReadyList());
            transaction.begin();
-           defSite.setStatus(StatusIndexing.INDEXED);
+           if (!defSite.getStatus().equals(StatusIndexing.FAILED)){
+           defSite.setStatus(StatusIndexing.INDEXED);}
            transaction.commit();
 
         }

@@ -87,18 +87,43 @@ public abstract class BeforeIndexing {
         return defaultSiteList;
     }
 
-    public static void deleteFromBD (ArrayList<model.Site> sitesCfgFromBD){
-        Transaction transaction = session.beginTransaction();
+    public static void deleteFromBD (List<searchengine.config.Site> sitesList){
+        try {
+            Connection connection = DriverManager.getConnection(
+                    "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
         ArrayList<model.Page> pagesCfgFromBD  = new ArrayList<>();
-        for (int i = sitesCfgFromBD.size()-1; i > -1 ; i--) {
+        ArrayList<Integer> idSites = new ArrayList<>();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < sitesList.size(); i++) {
+            String subQuery = sitesList.get(i).getUrl().replaceAll("https://www.","");
+            subQuery =subQuery.replaceAll("http://www.","");
+            if (subQuery.substring(subQuery.length()-1).equals("/")){
+                subQuery = subQuery.substring(0,subQuery.length()-1);
+            }
             System.out.println("Начало итерации удаления");
-            pagesCfgFromBD.addAll(BeforeIndexing.loadPagesFromBD(sitesCfgFromBD.get(i)));
+            String query = "SELECT * FROM SITE WHERE url LIKE '%" + subQuery + "_';";
+            //pagesCfgFromBD.addAll(BeforeIndexing.loadPagesFromBD(sitesCfgFromBD.get(i)));
             System.out.println("До удаления");
-            session.remove(sitesCfgFromBD.get(i));
-            session.flush();
+            /*ResultSet rs = connection.createStatement().executeQuery(query);
+            while(rs.next()){
+                int sID = rs.getInt("id");
+                System.out.println(sID);
+                idSites.add(sID);
+                builder.append("DELETE FROM PAGE WHERE SITE_ID =" + sID + ";");
+                //query = "DELETE FROM PAGE WHERE SITE_ID =" + sID + ";";
+                //ResultSet rsDelete = connection.createStatement().executeQuery(query);
+            }*/
+            query = "DELETE FROM SITE WHERE url LIKE '%" + subQuery + "%';";
+            connection.createStatement().executeUpdate(query);
             System.out.println("После удаления");
         }
-        transaction.commit();
+        connection.close();
+        } catch (
+                SQLException e) {
+            e.printStackTrace();
+        };
+
+
     }
     /*System.out.println("Удаление Pages");
         for (int i = pagesCfgFromBD.size()-1; i > -1 ; i--) {

@@ -36,9 +36,12 @@ public class ApiController {
     }
 
     @GetMapping("/startIndexing")
-    public ResponseEntity<JSONObject> startIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException, SQLIntegrityConstraintViolationException {
+    public ResponseEntity<JSONObject> startIndexing() throws HeuristicRollbackException,
+            SystemException, HeuristicMixedException, RollbackException, SQLIntegrityConstraintViolationException {
         return new ResponseEntity<>(siteIndexing.startSitesIndexing(),HttpStatus.OK);
     }
+
+
 
 }
 

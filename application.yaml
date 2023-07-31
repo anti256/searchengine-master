@@ -18,12 +18,19 @@ spring:
 
 indexing-settings:
   sites:
-    - url: https://www.mtrele.ru
-      name: НТЦ Механотроника
-    - url: https://www.niioncologii.ru
-      name: НМИЦ онкологии им. Н.Н. Петрова
-    - url: https://www.pasteurorg.ru
-      name: Санкт-Петербургский НИИ эпидемиологии и микробиологии имени Пастера
+    - url: http://www.playback.ru/
+      name: PlayBack.Ru
+    - url: https://ipfran.ru/
+      name: Федеральный исследовательский центр
+    - url: http://radiomv.ru/
+      name: radiomv.ru
+
+    #- url: https://www.mtrele.ru
+     # name: НТЦ Механотроника
+    #- url: https://www.niioncologii.ru
+     # name: НМИЦ онкологии им. Н.Н. Петрова
+    #- url: http://www.niineptun.ru
+     # name: НАУЧНО-ИССЛЕДОВАТЕЛЬСКИЙ ИНСТИТУТ АВТОМАТИЗИРОВАННЫХ СИСТЕМ И КОМПЛЕКСОВ СВЯЗИ НЕПТУН
     #- url: https://www.lenta.ru
      # name: Лента.ру
     #- url: https://www.skillbox.ru

@@ -1,5 +1,6 @@
 package searchengine.services.SiteIndexingUnderHood;
 import model.Page;
+import model.StatusIndexing;
 import org.hibernate.Transaction;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -9,7 +10,9 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
@@ -29,50 +32,65 @@ public class UrlListFromSite {
         todoTaskList.add(urlSite);//добавляем ссылку в список на выполнение                                            https://mtrele.ru
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();//очередь
         while (!todoTaskList.isEmpty()) {//работаем пока список необработанных ссылок не пустой
-            String minusStart = todoTaskList.get(0).replaceAll(urlSite, "").equals("") ? "/":
-                    todoTaskList.get(0).replaceAll(urlSite, "") ;
+            String defaultUrl = todoTaskList.get(0);
+            String minusStart = defaultUrl.replaceAll(urlSite, "").equals("") ? "/":
+                    defaultUrl.replaceAll(urlSite, "") ;
             if (!isExistInPageBDbyUrl(minusStart, site.getId()))
                     //!urlReadyList.contains(todoTaskList.get(0)))
             {//проверяем, что первой ссылки нет в списке обработанных ссылок
-                try {
-                    //вытаскиваем первую в списке ссылку
-                    //строку-ссылку присваиваем переменной, чтоб далее программа не тратила время на открытие списка
-                    String defaultUrl = todoTaskList.get(0);
+                //вытаскиваем первую в списке ссылку
+                //строку-ссылку присваиваем переменной, чтоб далее программа не тратила время на открытие списка
+                Transaction transaction = session.beginTransaction();
+                try
+                {
+                    System.out.println("defaultUrl = todoTaskList.get(0) " + defaultUrl);
                     urlReadyList.add(defaultUrl);//заносим ссылку в список обработанных
+                    //connect - подключение к html в инете, get - парсинг, создается документ,
+                    // maxBodySize(0) - снимает ограничение на размер скачиваемых данных
+                    Document doc = Jsoup.connect(defaultUrl).maxBodySize(0).get();
 
-                    Transaction transaction = session.beginTransaction();
                     model.Page defPage = new Page();
                     defPage.setSite1(site);
                     defPage.setCode(200);
                     defPage.setPath((defaultUrl.replaceAll(urlSite,  "").equals("")) ? "/" :
                             defaultUrl.replaceAll(urlSite,  ""));
-                    defPage.setContent(" ");
+                    defPage.setContent(doc.select("html").toString());
+                    site.setStatusTime(new Date());
                     System.out.println("++++Заносится в базу" + defPage.getPath() + ", site - " + defPage.getSite1().getId());
                     session.persist(defPage);
+                    session.persist(site);
                     transaction.commit();
 
-                    //connect - подключение к html в инете, get - парсинг, создается документ,
-                    // maxBodySize(0) - снимает ограничение на размер скачиваемых данных
-                    Document doc = Jsoup.connect(defaultUrl).maxBodySize(0).get();
                     //из документа выбираются все элементы с тегами-адресом a[href]
                     //elements фактически является динамическим массивом нарезок hml-кода с данными по линиям
                     Elements elements = doc.select("a[href]");
                     TaskUrlSite taskUrl = null;//создаем экземпляр задачи
                     todoTaskList.addAll(forkJoinPool.invoke(new TaskUrlSite(elements)));//заносим экземпляр задачи в пул
-                    todoTaskList.remove(defaultUrl);//удаляем отработанную ссылку из списка
+                    //todoTaskList.remove(defaultUrl);//удаляем отработанную ссылку из списка
+                    /*Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+                    for (Thread th:threadSet
+                         ) {
+                        System.out.println("поток " + th.getName() + "  " + th.getId() + "  " + th.toString());
+                    }*/
                 }//конец try
                 catch (IOException ex) {
+                    //System.out.println("ашипка!");
                     ex.getStackTrace();
+                    site.setStatus(StatusIndexing.FAILED);
+                    session.persist(site);
+                    transaction.commit();
                 }
-            } else{
-                todoTaskList.remove(0);//если ссылка есть в списке обработанных, она просто удаляется из списка
-            }
+            } /*else{
+                System.out.println("url в базе - удаляем из todoTaskList");
+                //todoTaskList.remove(0);//если ссылка есть в списке обработанных, она просто удаляется из списка
+            }*/
+        todoTaskList.remove(0);
         }
     }
 
     //геттер готового списка
-    public ArrayList<String> getUrlReadyList() {
-        return urlReadyList;
+    public Boolean getUrlReadyList() {
+        return true;
     }
 
     //------------------------------------------------------------------------
