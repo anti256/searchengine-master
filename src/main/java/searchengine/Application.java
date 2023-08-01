@@ -32,6 +32,8 @@ public class Application {
         try {
             connection = DriverManager.getConnection(
                             "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
+            //connection.createStatement().execute("TRUNCATE SITE");
+            //connection.createStatement().execute("TRUNCATE PAGE");
             connection.createStatement().execute("ALTER TABLE PAGE ADD UNIQUE INDEX (path(200), site_id)");
             connection.createStatement().execute("DELETE FROM SITE");
             connection.createStatement().execute("DELETE FROM PAGE");

@@ -27,12 +27,12 @@ public class UrlListFromSite {
 
     public UrlListFromSite(model.Site site){//конструктор
         this.site = site;
-        String urlString = site.getUrl();
+        String urlString = site.getUrl();//.replace("https://", "http://");
         urlSite = urlString.replaceAll("www.","");//убираем из ссылки www     https://www.mtrele.ru -> https://mtrele.ru
         todoTaskList.add(urlSite);//добавляем ссылку в список на выполнение                                            https://mtrele.ru
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();//очередь
         while (!todoTaskList.isEmpty()) {//работаем пока список необработанных ссылок не пустой
-            String defaultUrl = todoTaskList.get(0);
+            String defaultUrl = todoTaskList.get(0).replace("https://", "http://");
             String minusStart = defaultUrl.replaceAll(urlSite, "").equals("") ? "/":
                     defaultUrl.replaceAll(urlSite, "") ;
             if (!isExistInPageBDbyUrl(minusStart, site.getId()))
@@ -43,6 +43,7 @@ public class UrlListFromSite {
                 Transaction transaction = session.beginTransaction();
                 try
                 {
+                    site.setStatus(StatusIndexing.INDEXING);
                     System.out.println("defaultUrl = todoTaskList.get(0) " + defaultUrl);
                     urlReadyList.add(defaultUrl);//заносим ссылку в список обработанных
                     //connect - подключение к html в инете, get - парсинг, создается документ,
@@ -56,9 +57,9 @@ public class UrlListFromSite {
                             defaultUrl.replaceAll(urlSite,  ""));
                     defPage.setContent(doc.select("html").toString());
                     site.setStatusTime(new Date());
-                    System.out.println("++++Заносится в базу" + defPage.getPath() + ", site - " + defPage.getSite1().getId());
+                    System.out.println("++++Заносится в базу " + defPage.getPath() + ", site - " + defPage.getSite1().getId());
                     session.persist(defPage);
-                    session.persist(site);
+                    session.update(site);
                     transaction.commit();
 
                     //из документа выбираются все элементы с тегами-адресом a[href]
@@ -74,10 +75,20 @@ public class UrlListFromSite {
                     }*/
                 }//конец try
                 catch (IOException ex) {
-                    //System.out.println("ашипка!");
-                    ex.getStackTrace();
+                    System.out.println("ашипка!");
+                    //ex.getStackTrace();
+                    model.Page defPage = new Page();
+                    defPage.setSite1(site);
+                    defPage.setCode(405);
+                    defPage.setPath((defaultUrl.replaceAll(urlSite,  "").equals("")) ? "/" :
+                            defaultUrl.replaceAll(urlSite,  ""));
+                    defPage.setContent(" ");
+                    System.out.println("++++Заносится в базу " + defPage.getPath() + ", site - " + defPage.getSite1().getId());
+                    session.persist(defPage);
+                    site.setStatusTime(new Date());
                     site.setStatus(StatusIndexing.FAILED);
-                    session.persist(site);
+                    System.err.println(ex.toString());
+                    session.update(site);
                     transaction.commit();
                 }
             } /*else{
