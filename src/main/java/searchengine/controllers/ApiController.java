@@ -10,6 +10,7 @@ import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.services.SiteIndexing;
 import searchengine.services.SiteIndexingImpl;
 import searchengine.services.StatisticsService;
+import searchengine.services.StopIndexing;
 
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
@@ -24,9 +25,12 @@ public class ApiController {
     private final StatisticsService statisticsService;
     private final SiteIndexing siteIndexing;
 
-    public ApiController(StatisticsService statisticsService, SiteIndexing siteIndexing) {
+    private final StopIndexing stopIndexing;
+
+    public ApiController(StatisticsService statisticsService, SiteIndexing siteIndexing, StopIndexing stopIndexing) {
         this.statisticsService = statisticsService;
         this.siteIndexing = siteIndexing;
+        this.stopIndexing = stopIndexing;
     }
 
 
@@ -41,6 +45,10 @@ public class ApiController {
         return new ResponseEntity<>(siteIndexing.startSitesIndexing(),HttpStatus.OK);
     }
 
+    @GetMapping("/stopIndexing")
+    public ResponseEntity<JSONObject> stopIndexing() {
+        return new ResponseEntity<>(stopIndexing.stopSitesIndexing(),HttpStatus.OK);
+    }
 
 
 }

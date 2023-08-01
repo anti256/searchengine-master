@@ -32,7 +32,7 @@ public class UrlListFromSite {
         todoTaskList.add(urlSite);//добавляем ссылку в список на выполнение                                            https://mtrele.ru
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();//очередь
         while (!todoTaskList.isEmpty()) {//работаем пока список необработанных ссылок не пустой
-            String defaultUrl = todoTaskList.get(0).replace("https://", "http://");
+            String defaultUrl = todoTaskList.get(0);
             String minusStart = defaultUrl.replaceAll(urlSite, "").equals("") ? "/":
                     defaultUrl.replaceAll(urlSite, "") ;
             if (!isExistInPageBDbyUrl(minusStart, site.getId()))
@@ -48,7 +48,7 @@ public class UrlListFromSite {
                     urlReadyList.add(defaultUrl);//заносим ссылку в список обработанных
                     //connect - подключение к html в инете, get - парсинг, создается документ,
                     // maxBodySize(0) - снимает ограничение на размер скачиваемых данных
-                    Document doc = Jsoup.connect(defaultUrl).maxBodySize(0).get();
+                    Document doc = Jsoup.connect(defaultUrl.replace("https://", "http://")).maxBodySize(0).get();
 
                     model.Page defPage = new Page();
                     defPage.setSite1(site);
@@ -87,6 +87,7 @@ public class UrlListFromSite {
                     session.persist(defPage);
                     site.setStatusTime(new Date());
                     site.setStatus(StatusIndexing.FAILED);
+                    site.setLastError("Не удалось прочитать данные");
                     System.err.println(ex.toString());
                     session.update(site);
                     transaction.commit();

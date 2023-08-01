@@ -9,5 +9,6 @@ import javax.transaction.SystemException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 public interface SiteIndexing {
-    JSONObject startSitesIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException, RollbackException, SQLIntegrityConstraintViolationException;
+    JSONObject startSitesIndexing() throws HeuristicRollbackException, SystemException, HeuristicMixedException,
+            RollbackException, SQLIntegrityConstraintViolationException;
 }
