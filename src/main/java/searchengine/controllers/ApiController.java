@@ -1,5 +1,6 @@
 package searchengine.controllers;
 
+import lombok.AllArgsConstructor;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 
 @RestController
 @RequestMapping("/api")
+@AllArgsConstructor
 public class ApiController {
 
     private final StatisticsService statisticsService;
@@ -27,11 +29,11 @@ public class ApiController {
 
     private final StopIndexing stopIndexing;
 
-    public ApiController(StatisticsService statisticsService, SiteIndexing siteIndexing, StopIndexing stopIndexing) {
+    /*public ApiController(StatisticsService statisticsService, SiteIndexing siteIndexing, StopIndexing stopIndexing) {
         this.statisticsService = statisticsService;
         this.siteIndexing = siteIndexing;
         this.stopIndexing = stopIndexing;
-    }
+    }*/
 
 
     @GetMapping("/statistics")

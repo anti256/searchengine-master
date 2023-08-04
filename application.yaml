@@ -7,30 +7,32 @@ spring:
    password: "935117256A1B2C3D4_"
    url: jdbc:mysql://localhost:3306/search_engine?autoReconnect=true&useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true
  jpa:
+   open-in-view: false
    properties:
      hibernate:
        dialect: org.hibernate.dialect.MySQL8Dialect
    hibernate:
-     ddl-auto: update
+     ddl-auto: create-drop #update
    show-sql: true
 
 # example values
 
 indexing-settings:
   sites:
-    - url: http://www.playback.ru/
-      name: PlayBack.Ru
-    - url: https://ipfran.ru/
-      name: Федеральный исследовательский центр
-    - url: http://radiomv.ru/
-      name: radiomv.ru
+    #- url: http://radiomv.ru/
+    #  name: radiomv.ru
+    #- url: http://www.playback.ru/
+     # name: PlayBack.Ru
+    #- url: https://ipfran.ru/
+     # name: Федеральный исследовательский центр
 
-    #- url: https://www.mtrele.ru
-     # name: НТЦ Механотроника
-    #- url: https://www.niioncologii.ru
-     # name: НМИЦ онкологии им. Н.Н. Петрова
-    #- url: http://www.niineptun.ru
-     # name: НАУЧНО-ИССЛЕДОВАТЕЛЬСКИЙ ИНСТИТУТ АВТОМАТИЗИРОВАННЫХ СИСТЕМ И КОМПЛЕКСОВ СВЯЗИ НЕПТУН
+
+    - url: https://www.mtrele.ru
+      name: НТЦ Механотроника
+    - url: https://www.niioncologii.ru
+      name: НМИЦ онкологии им. Н.Н. Петрова
+    - url: http://www.niineptun.ru
+      name: НАУЧНО-ИССЛЕДОВАТЕЛЬСКИЙ ИНСТИТУТ АВТОМАТИЗИРОВАННЫХ СИСТЕМ И КОМПЛЕКСОВ СВЯЗИ НЕПТУН
     #- url: https://www.lenta.ru
      # name: Лента.ру
     #- url: https://www.skillbox.ru

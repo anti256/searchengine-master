@@ -65,7 +65,10 @@ public class UrlListFromSite {
                     //из документа выбираются все элементы с тегами-адресом a[href]
                     //elements фактически является динамическим массивом нарезок hml-кода с данными по линиям
                     Elements elements = doc.select("a[href]");
+                    System.out.println("elements.size = " + elements.size());
                     TaskUrlSite taskUrl = null;//создаем экземпляр задачи
+//                    System.out.println("<<<<<<<<<<<<" + elements.toString());
+//                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
                     todoTaskList.addAll(forkJoinPool.invoke(new TaskUrlSite(elements)));//заносим экземпляр задачи в пул
                     //todoTaskList.remove(defaultUrl);//удаляем отработанную ссылку из списка
                     /*Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
@@ -118,18 +121,36 @@ public class UrlListFromSite {
         protected List<String> compute() {//тело задачи, тип - то, что на выходе
             List<String> urlReadyToTodo = new ArrayList<>();//локальный список правильных обработанных ссылок
 
+            System.out.println("<<<<<<<<<<<<" + elements.size() + "шт." + elements.toString());
+            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
             if (elements.size() < 2){//если в локальном списке задач элементов меньше 2, т.е. для каждого элемента делаем свой поток
                 for (Element el:elements) {//перебор элементов
-                    String urlStr = el.absUrl("href");//из конкретного элемента вытаскиваем ссылку
+                    String urlStr = el.absUrl("href").replace("https://", "http://");//из конкретного элемента вытаскиваем ссылку
+
+                    System.err.println("~~~Начальный urlStr - " + urlStr);
+                    //если элемент пустой либо состоит только из /, после него вставить начальный url
+                    if ((urlStr.isEmpty()) || ((urlStr.charAt(0) == '/') && ((urlStr.length() < 2) || (urlStr.charAt(1) != '/')))) {
+                        urlStr = urlSite.concat(urlStr);
+                    }
+                    System.out.println("~~~href - " + urlStr);
                     urlStr = urlStr.replaceAll("www.", "");//убираем www из ссылки
+                    System.out.println("~~~urlStr (-www.) - " + urlStr);
                     //добавляем в список только ссылки с данного сайта
-                    String minusUrl = urlStr.replaceAll(urlSite, "");
-                    if (minusUrl.length() == (urlStr.length() - urlSite.length())) {//если ссылка с нужного сайта
+                    String minusUrl = urlStr.replaceAll(urlSite.replace("https://", "http://"), "");
+                    System.out.println("~~~urlSite (замена https на http) - " + urlSite.replace("https://", "http://"));
+                    System.out.println("~~~minusUrl (urlStr минус urlSite(http))- " + minusUrl);
+                    if (minusUrl.length() == (urlStr.length() - urlSite.replace("https://", "http://").length())) {//если ссылка с нужного сайта
                         //проверяем на наличие #
                         String minusResh = urlStr.replaceAll("[^#]+[#]{1}[^#]*", "");
+                        System.out.println("~~~minusResh (для проверки на внутреннюю ссылку #) - " + minusResh);
                         if (!minusResh.equals("")) {
-                            //проверяем на наличие полученной ссылки в списках обработанных и необработанных ссылок
-                            if ((!isExistInPageBDbyUrl(urlStr, site.getId())
+                            System.out.println("~~~minusResh.equals(\"\") - " + minusResh.equals(""));
+                            System.out.println("~~~!isExistInPageBDbyUrl(urlStr, site.getId()) - " + !isExistInPageBDbyUrl(urlStr, site.getId()));
+                            System.out.println("~~~!todoTaskList.contains(urlStr) - " + !todoTaskList.contains(urlStr));
+                            //проверяем на наличие полученной ссылки в БД и в списке необработанных ссылок
+                            //сюда urlStr попадает без www и c http://
+                            if (((!isExistInPageBDbyUrl(urlStr, site.getId()))
                                     //!urlReadyList.contains(urlStr)
                         ) && (!todoTaskList.contains(urlStr))) {
                                 urlReadyToTodo.add(urlStr);//добаляем ссылку в список необработанных
@@ -143,8 +164,8 @@ public class UrlListFromSite {
                 try {//создаем две подзадачи, каждому свою часть списка
                     int a1 = elements.size() / 2;
                     int b = elements.size() - 1;
-                    TaskUrlSite firstPart = new TaskUrlSite(elements.subList(0, a1 - 1));
-                    TaskUrlSite secondPart = new TaskUrlSite(elements.subList(a1, b));
+                    TaskUrlSite firstPart = new TaskUrlSite(elements.subList(0, a1));
+                    TaskUrlSite secondPart = new TaskUrlSite(elements.subList(a1, b + 1));
                     firstPart.fork();//добавляем задачи в пул
                     secondPart.fork();
                     urlReadyToTodo.addAll(secondPart.join());//запускаем задачи и добавляем их результаты в локальный список
