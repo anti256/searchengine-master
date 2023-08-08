@@ -126,22 +126,26 @@ public class UrlListFromSite {
 
             if (elements.size() < 2){//если в локальном списке задач элементов меньше 2, т.е. для каждого элемента делаем свой поток
                 for (Element el:elements) {//перебор элементов
-                    String urlStr = el.absUrl("href").replace("https://", "http://");//из конкретного элемента вытаскиваем ссылку
-
+                    String urlStr = el.absUrl("href");//.replace("https://", "http://");//из конкретного элемента вытаскиваем ссылку
+                    if (todoTaskList.contains(urlStr)){continue;}
+                    urlStr = urlSite.replaceFirst("https://", "http://");
                     System.err.println("~~~Начальный urlStr - " + urlStr);
-                    //если элемент пустой либо состоит только из /, после него вставить начальный url
+                    //если элемент пустой либо состоит только из /, делаем из него начальный url с http
                     if ((urlStr.isEmpty()) || ((urlStr.charAt(0) == '/') && ((urlStr.length() < 2) || (urlStr.charAt(1) != '/')))) {
-                        urlStr = urlSite.concat(urlStr);
+                        urlStr = urlSite.replaceFirst("https://", "http://");//.concat(urlStr);
                     }
                     System.out.println("~~~href - " + urlStr);
-                    urlStr = urlStr.replaceAll("www.", "");//убираем www из ссылки
+                    urlStr = urlStr.replaceAll("www.", "");//делаем ссылку с http и без www
                     System.out.println("~~~urlStr (-www.) - " + urlStr);
                     //добавляем в список только ссылки с данного сайта
+                    //из ссылки с http и без www вычетаем начальную ссылку с http и без www
                     String minusUrl = urlStr.replaceAll(urlSite.replace("https://", "http://"), "");
                     System.out.println("~~~urlSite (замена https на http) - " + urlSite.replace("https://", "http://"));
                     System.out.println("~~~minusUrl (urlStr минус urlSite(http))- " + minusUrl);
-                    if (minusUrl.length() == (urlStr.length() - urlSite.replace("https://", "http://").length())) {//если ссылка с нужного сайта
-                        //проверяем на наличие #
+
+                    if (minusUrl.length() == (urlStr.length() - urlSite.replace("https://", "http://").length())) {
+                        //если ссылка с нужного сайта
+                        //проверяем на наличие # - если есть, после замены от строки ничего не останется
                         String minusResh = urlStr.replaceAll("[^#]+[#]{1}[^#]*", "");
                         System.out.println("~~~minusResh (для проверки на внутреннюю ссылку #) - " + minusResh);
                         if (!minusResh.equals("")) {
@@ -150,9 +154,7 @@ public class UrlListFromSite {
                             System.out.println("~~~!todoTaskList.contains(urlStr) - " + !todoTaskList.contains(urlStr));
                             //проверяем на наличие полученной ссылки в БД и в списке необработанных ссылок
                             //сюда urlStr попадает без www и c http://
-                            if (((!isExistInPageBDbyUrl(urlStr, site.getId()))
-                                    //!urlReadyList.contains(urlStr)
-                        ) && (!todoTaskList.contains(urlStr))) {
+                            if (!isExistInPageBDbyUrl(minusUrl, site.getId())) {
                                 urlReadyToTodo.add(urlStr);//добаляем ссылку в список необработанных
                                       System.out.println(urlReadyList.size() + "---" + urlStr + "\t\t" + Thread.currentThread().getName() + "=== " +
                                                 todoTaskList.size());
