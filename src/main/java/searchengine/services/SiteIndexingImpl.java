@@ -46,8 +46,8 @@ public class SiteIndexingImpl implements SiteIndexing{
         new addAnotherDBrecords();//добавление в БД записей для отработки
 
         sitesEntityFromCfg.addAll(BeforeIndexing.loadSitesFromBDbyCFGorCreateNew(sitesList));//Наполнение списка сущностями из БД по файлу конфигурации либо создание новых
-        System.out.println("sitesEntityFromCfg.size = " + sitesEntityFromCfg.size());
-        System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
+System.out.println("sitesEntityFromCfg.size = " + sitesEntityFromCfg.size());
+System.out.println("Наполнение списка сущностями из БД по файлу конфигурации закончено");
         //BeforeIndexing.deleteFromBD(sitesEntityFromCfg);//удаление всех сущностей по файлу конфигурации
         BeforeIndexing.deleteFromBD(sitesList);
        for (int i = 0; i < sitesEntityFromCfg.size(); i++) {
@@ -59,7 +59,7 @@ public class SiteIndexingImpl implements SiteIndexing{
            defSite.setStatusTime(new Date());
             session.persist(defSite);
             transaction.commit();
-           System.out.println("url = " + defSite.getUrl() + ", defSite.getId() - " + defSite.getId());
+System.out.println("url = " + defSite.getUrl() + ", defSite.getId() - " + defSite.getId());
            ArrayList<String> pageUrl = new ArrayList<>();
           // UrlListFromSite ulfs = new UrlListFromSite(defSite);
            Boolean boo = (new UrlListFromSite(defSite)).getUrlReadyList();

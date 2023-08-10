@@ -29,8 +29,8 @@ public class UrlListFromSite {
     public UrlListFromSite(model.Site site){//конструктор
         this.site = site;
         String urlString = site.getUrl();//.replace("https://", "http://");
-        urlSite = urlString.replaceFirst("www.","");//убираем из ссылки www     https://www.mtrele.ru -> https://mtrele.ru
-        urlSiteHTTP = urlSite.replaceFirst("https://", "http://");
+        urlSite = urlString.replaceFirst("www.","").replaceFirst("https://", "http://");//убираем из ссылки www     https://www.mtrele.ru -> https://mtrele.ru
+        urlSiteHTTP = urlSite;//.replaceFirst("https://", "http://");
         todoTaskList.add(urlSite);//добавляем ссылку в список на выполнение                                            https://mtrele.ru
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();//очередь
         while (!todoTaskList.isEmpty()) {//работаем пока список необработанных ссылок не пустой
@@ -59,7 +59,9 @@ System.out.println("defaultUrl = todoTaskList.get(0) " + defaultUrl);
                             defaultUrl.replaceAll(urlSite,  ""));
                     defPage.setContent(doc.select("html").toString());
                     site.setStatusTime(new Date());
-System.out.println("++++Заносится в базу " + defPage.getPath() + ", site - " + defPage.getSite1().getId());
+System.err.println((defaultUrl.replaceAll(urlSite,  "").equals("")) ? "/" :
+        defaultUrl.replaceAll(urlSite,  ""));
+System.err.println("++++Заносится в базу " + defPage.getPath() + ", site - " + defPage.getSite1().getId());
                     session.persist(defPage);
                     session.update(site);
                     transaction.commit();
@@ -67,7 +69,7 @@ System.out.println("++++Заносится в базу " + defPage.getPath() + "
                     //из документа выбираются все элементы с тегами-адресом a[href]
                     //elements фактически является динамическим массивом нарезок hml-кода с данными по линиям
                     Elements elements = doc.select("a[href]");
-System.out.println("elements.size = " + elements.size());
+System.err.println("elements.size = " + elements.size());
                     TaskUrlSite taskUrl = null;//создаем экземпляр задачи
 //                    System.out.println("<<<<<<<<<<<<" + elements.toString());
 //                    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
@@ -85,10 +87,10 @@ System.out.println("elements.size = " + elements.size());
                     model.Page defPage = new Page();
                     defPage.setSite1(site);
                     defPage.setCode(405);
-                    defPage.setPath((defaultUrl.replaceAll(urlSite,  "").equals("")) ? "/" :
-                            defaultUrl.replaceAll(urlSite,  ""));
+                    defPage.setPath((defaultUrl.replaceFirst(urlSite,  "").equals("")) ? "/" :
+                            defaultUrl.replaceFirst(urlSite,  ""));
                     defPage.setContent(" ");
-                    System.out.println("++++Заносится в базу " + defPage.getPath() + ", site - " + defPage.getSite1().getId());
+System.out.println("++++Заносится в базу " + defPage.getPath() + ", site - " + defPage.getSite1().getId());
                     session.persist(defPage);
                     site.setStatusTime(new Date());
                     site.setStatus(StatusIndexing.FAILED);
@@ -191,8 +193,9 @@ System.out.println("~~~!todoTaskList.contains(urlStr) - " + !todoTaskList.contai
             Connection connection = DriverManager.getConnection(
                     "jdbc:mysql://localhost:3306/search_engine?user=root&password=935117256A1B2C3D4_");
             //connection.createStatement().execute("ALTER TABLE PAGE ADD UNIQUE INDEX (path(200))");
+            url = url.replaceAll("%", "\\%");
             String query = "SELECT * FROM PAGE WHERE PATH = \'" + url + "\' and site_id = " + id;
-System.out.println(query);
+System.out.println("????????????????query в isExistInPageBDbyUrl - " + query);
             ResultSet rs = connection.createStatement().executeQuery(query);
             if (!rs.isBeforeFirst()){
                 connection.close();
